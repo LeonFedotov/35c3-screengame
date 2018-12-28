@@ -42,7 +42,7 @@ const chunks = _.range(CONNECTIONS_COUNT)
 
 for(x = 0; x<1920;x++) {
     for(y=0; y<1080;y++) {
-        chunks[(x+y)%CONNECTIONS_COUNT]+=`PX ${x} ${y} ffff00\n`
+        chunks[(x+y)%CONNECTIONS_COUNT]+=`PX ${x} ${y} ${nextColor()}\n`
     }
 }
 
