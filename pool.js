@@ -3,7 +3,7 @@ const _ = require('lodash')
 const fs = require('fs')
 const bmp = require('bmp-js')
 
-const CONNECTIONS_COUNT = 5
+const CONNECTIONS_COUNT = 10
 const SEND_DELAY = 100
 
 const getConn = (name = _.uniqueId(), options = { host: '151.217.40.82', port: 1234 }) => {
