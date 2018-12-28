@@ -1,7 +1,11 @@
 const net = require('net')
+const net = require('net')
 const _ = require('lodash')
 const fs = require('fs')
 const bmp = require('bmp-js')
+
+const CONNECTIONS_COUNT = 5
+const SEND_DELAY = 100
 
 const getConn = (name = _.uniqueId(), options = { host: '151.217.40.82', port: 1234 }) => {
     const conn = net
@@ -35,11 +39,9 @@ const colors = [
 ]
 
 const nextColor = () => (colors.unshift(colors.pop()),colors[0])
+const connections = _.range(CONNECTIONS_COUNT).map(i => getConn())
 
-
-const connections = _.range(10).map(i => getConn(i))
 const {data, width, height} = bmp.decode(fs.readFileSync('./tami-logo.bmp'))
-
 const chunks = _(data)
     //group per pixel
     .chunk(4)
@@ -50,16 +52,16 @@ const chunks = _(data)
     //create command strings
     .map((row, y) => row.map((color, x) => `PX ${x} ${y} ${color}`).join('\n'))
     //split per connections
-    .chunk(connections.length)
+    .chunk(CONNECTIONS_COUNT)
     //join each chunk rows
     .map(chunk => chunk.join('\n'))
     .value()
 
 const sendLogo = () => {
-    console.log('sending logo...')
+    process.stdout.write('.')
     chunks.map((chunk, i) =>
-        nextConn().write(`OFFSET 0 200\n${chunk.replace(/000000/g, nextColor())}`)
+        nextConn().write(`OFFSET 1000 200\n${chunk.replace(/000000/g, nextColor())}`)
     )
 }
 
-setInterval(sendLogo, 10)
+setInterval(sendLogo, SEND_DELAY)

@@ -1,9 +1,7 @@
 const net = require('net')
 const _ = require('lodash')
-const fs = require('fs')
-const bmp = require('bmp-js')
 
-const CONNECTIONS_COUNT = 5
+const CONNECTIONS_COUNT = 10
 const SEND_DELAY = 100
 
 const getConn = (name = _.uniqueId(), options = { host: '151.217.40.82', port: 1234 }) => {
@@ -50,9 +48,7 @@ for(x = 0; x<1920;x++) {
 
 const clearScreen = () => {
     process.stdout.write('.')
-    chunks.map((chunk, i) =>
-        nextConn().write(`${chunk}`)
-    )
+    chunks.map((chunk) => nextConn().write(chunk))
 }
 
 setInterval(clearScreen, SEND_DELAY)
