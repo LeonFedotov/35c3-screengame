@@ -3,18 +3,20 @@ const _ = require('lodash')
 const fs = require('fs')
 const bmp = require('bmp-js')
 
-const getConn = (name = _.uniqueId(), options = { host: '151.217.40.82', port: 1234 }) =>
-    net
+const getConn = (name = _.uniqueId(), options = { host: '151.217.40.82', port: 1234 }) => {
+    const conn = net
         .createConnection(options, () => console.log(name, 'connection established'))
         .setTimeout(5000)
         .setEncoding('utf8')
         .on('data', (data) => console.log(name, 'incoming ', data))
-        .on('timeout', () => console.log(name, 'timeout'))
-        .on('error', (err) => console.error(name, 'error', err))
+        .on('timeout', () => (console.log(name, 'timeout'), replaceConn(conn)))
+        .on('error', (err) => (console.error(name, err), replaceConn(conn)))
         .on('end', () => console.log(name, 'socket disconnect'))
+    return conn
+}
 
 const nextConn = () => (connections.unshift(connections.pop()),connections[0])
-
+const replaceConn = (conn) => connections.splice(connections.indexOf(conn), 1, getConn()).pop().destroy()
 const colors = [
     'C0C0C0',
     '808080',
@@ -56,8 +58,8 @@ const chunks = _(data)
 const sendLogo = () => {
     console.log('sending logo...')
     chunks.map((chunk, i) =>
-        nextConn().write(`OFFSET 1100 0\n${chunk.replace(/000000/g, nextColor())}`)
+        nextConn().write(`OFFSET 0 200\n${chunk.replace(/000000/g, nextColor())}`)
     )
 }
 
-setInterval(sendLogo, 100)
+setInterval(sendLogo, 10)

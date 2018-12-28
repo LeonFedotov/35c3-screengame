@@ -1,68 +1,53 @@
 const net = require('net')
 const _ = require('lodash')
+const fs = require('fs')
+const bmp = require('bmp-js')
 
-const connections = _.range(10)
-    .map(conn => getConn(conn))
+const CONNECTIONS_COUNT = 5
+const SEND_DELAY = 10
 
-function getConn(connName = 'lol'){
-
-    const options = {
-        host:'151.217.40.82',
-        port: 1234
-    }
-
-    // Create TCP client.
-    const client = net.createConnection(options, function () {
-        console.log('Connection name : ' + connName)
-        console.log('Connection local address : ' + client.localAddress + ":" + client.localPort)
-        console.log('Connection remote address : ' + client.remoteAddress + ":" + client.remotePort)
-    })
-
-    client.setTimeout(1000)
-    client.setEncoding('utf8')
-
-    // When receive server send back data.
-    client.on('data', function (data) {
-        console.log('Server return data : ' + data)
-    })
-
-    // When connection disconnected.
-    client.on('end',function () {
-        connections[connections.indexOf(client)] = getConn(connName)
-        console.log('Client socket disconnect. ')
-    })
-
-    client.on('timeout', function () {
-        connections.splice(connections.indexOf(client), 1)
-        console.log('Client connection timeout. ')
-    })
-
-    client.on('error', function (err) {
-        connections[connections.indexOf(client)] = getConn(connName)
-        console.error(JSON.stringify(err))
-    })
-
-    return client
+const getConn = (name = _.uniqueId(), options = { host: '151.217.40.82', port: 1234 }) => {
+    const conn = net
+        .createConnection(options, () => console.log(name, 'connection established'))
+        .setTimeout(5000)
+        .setEncoding('utf8')
+        .on('data', (data) => console.log(name, 'incoming ', data))
+        .on('timeout', () => (console.log(name, 'timeout'), replaceConn(conn)))
+        .on('error', (err) => (console.error(name, err), replaceConn(conn)))
+        .on('end', () => console.log(name, 'socket disconnect'))
+    return conn
 }
 
-const chunks =
-    _.chunk(_.range(1920)
-        .map(row => _.range(1080).map(col =>
-            `PX ${row} ${col} FFFFFF`
-        ).join('\n'))
-        ,10)
-        .map(chunk => chunk.join('\n'))
+const nextConn = () => (connections.unshift(connections.pop()),connections[0])
+const replaceConn = (conn) => connections.splice(connections.indexOf(conn), 1, getConn()).pop().destroy()
+const colors = [
+    'C0C0C0',
+    '808080',
+    'FF0000',
+    '800000',
+    'FFFF00',
+    '808000',
+    '00FF00',
+    '008000',
+    '00FFFF',
+    '008080',
+    '0000FF',
+    '000080',
+    'FF00FF',
+    '800080'
+]
 
-const nextConn = () => {
-    const conn = connections.pop()
-    connections.unshift(conn)
-    return conn || connections.unshift(getConn())[0];
-}
+const nextColor = () => (colors.unshift(colors.pop()),colors[0])
+const connections = _.range(CONNECTIONS_COUNT).map(i => getConn(i))
 
-const sendLogo = () => {
+const chunks = _.chunk(_.range(1080).map(row =>
+    _.range(1920).map(col => `PX ${col} ${row} ff0000`).join('\n')
+), connections.length).map(chunk => chunk.join('\n'))
+
+const clearScreen = () => {
     chunks.map((chunk, i) =>
-        nextConn().write(chunk)
+        nextConn().write(`${chunk}`)
     )
 }
-// console.log(chunks)
-setInterval(sendLogo, 100)
+
+setInterval(clearScreen, SEND_DELAY)
