@@ -54,6 +54,7 @@ const chunks = _(data)
     .value()
 
 const sendLogo = () => {
+    console.log('sending logo...')
     chunks.map((chunk, i) =>
         nextConn().write(`OFFSET 1100 0\n${chunk.replace(/000000/g, nextColor())}`)
     )
