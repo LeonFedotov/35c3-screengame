@@ -40,15 +40,16 @@ const colors = [
 const nextColor = () => (colors.unshift(colors.pop()),colors[0])
 const connections = _.range(CONNECTIONS_COUNT).map(i => getConn())
 
-const chunks = _.range(connections.length)
+const chunks = _.range(CONNECTIONS_COUNT)
 
 for(x = 0; x<1920;x++) {
     for(y=0; y<1080;y++) {
-        chunks[(x+y)%10]+=`PX ${x} ${y} 00ff00\n`
+        chunks[(x+y)%CONNECTIONS_COUNT]+=`PX ${x} ${y} 00ff00\n`
     }
 }
 
 const clearScreen = () => {
+    process.stdout.write('.')
     chunks.map((chunk, i) =>
         nextConn().write(`${chunk}`)
     )
