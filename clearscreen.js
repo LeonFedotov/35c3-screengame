@@ -38,7 +38,7 @@ const colors = [
 ]
 
 const nextColor = () => (colors.unshift(colors.pop()),colors[0])
-const connections = _.range(CONNECTIONS_COUNT).map(i => getConn(i))
+const connections = _.range(CONNECTIONS_COUNT).map(i => getConn())
 
 const chunks = _.range(connections.length)
 
