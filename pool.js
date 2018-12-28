@@ -1,5 +1,4 @@
 const net = require('net')
-const net = require('net')
 const _ = require('lodash')
 const fs = require('fs')
 const bmp = require('bmp-js')
@@ -60,7 +59,7 @@ const chunks = _(data)
 const sendLogo = () => {
     process.stdout.write('.')
     chunks.map((chunk, i) =>
-        nextConn().write(`OFFSET 1000 200\n${chunk.replace(/000000/g, nextColor())}`)
+        nextConn().write(`OFFSET 0 500\n${chunk.replace(/000000/g, nextColor())}`)
     )
 }
 
