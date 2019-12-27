@@ -57,8 +57,8 @@ const chunks = _(data)
     .value()
 
 const offset = {x: 1000, y: 200}
-let dx = 20
-let dy = 20
+let dx = 100
+let dy = 100
 
 const sendLogo = () => {
     offset.x += dx
