@@ -59,7 +59,7 @@ const chunks = _(data)
 const sendLogo = () => {
     process.stdout.write('.')
     chunks.map((chunk, i) =>
-        nextConn().write(chunk)
+        nextConn().write(chunk.replace(/000000/g, nextColor()))
     )
 }
 
