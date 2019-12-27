@@ -64,7 +64,7 @@ const sendLogo = () => {
     offset.x += dx
     offset.y += dy
 
-    process.stdout.write('.')
+    process.stdout.write('.'+dx+':'+dy)
 
     if(offset.x > 1920 || offset.x <= 0) {
         dx *= -1
