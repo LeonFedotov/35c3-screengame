@@ -6,8 +6,8 @@ const bmp = require('bmp-js')
 const CONNECTIONS_COUNT = 10
 const SEND_DELAY = 100
 
-const getConn = (name = _.uniqueId(), options = { host: '151.217.40.82', port: 1234 }) => {
-    const conn = net
+const getConn = (name = _.uniqueId(), options = { host: '151.217.111.34', port: 1234 }) => {
+   const conn = net
         .createConnection(options, () => console.log(name, 'connection established'))
         .setTimeout(5000)
         .setEncoding('utf8')
@@ -53,13 +53,13 @@ const chunks = _(data)
     //split per connections
     .chunk(CONNECTIONS_COUNT)
     //join each chunk rows
-    .map(chunk => chunk.join('\n'))
+    .map(chunk => `OFFSET 1000 0\n${chunk.join('\n')}`)
     .value()
 
 const sendLogo = () => {
     process.stdout.write('.')
     chunks.map((chunk, i) =>
-        nextConn().write(`OFFSET 0 500\n${chunk.replace(/000000/g, nextColor())}`)
+        nextConn().write(chunk)
     )
 }
 
