@@ -40,7 +40,7 @@ const colors = [
 const nextColor = () => (colors.unshift(colors.pop()),colors[0])
 const connections = _.range(CONNECTIONS_COUNT).map(i => getConn())
 
-const {data, width, height} = bmp.decode(fs.readFileSync('./tami-logo.bmp'))
+const {data, width, height} = bmp.decode(fs.readFileSync('./tami-logo-small.bmp'))
 const chunks = _(data)
     //group per pixel
     .chunk(4)

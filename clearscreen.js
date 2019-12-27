@@ -1,8 +1,8 @@
 const net = require('net')
 const _ = require('lodash')
 
-const CONNECTIONS_COUNT = 10
-const SEND_DELAY = 100
+const CONNECTIONS_COUNT = 20
+const SEND_DELAY = 10
 
 const getConn = (name = _.uniqueId(), options = { host: '151.217.40.82', port: 1234 }) => {
     const conn = net
@@ -42,7 +42,7 @@ const chunks = _.range(CONNECTIONS_COUNT)
 
 for(x = 0; x<1920;x++) {
     for(y=0; y<1080;y++) {
-        chunks[(x+y)%CONNECTIONS_COUNT]+=`PX ${x} ${y} ${nextColor()}\n`
+        chunks[(x+y)%CONNECTIONS_COUNT]+=`PX ${x} ${y} ffff00\n`//${nextColor()}\n`
     }
 }
 
