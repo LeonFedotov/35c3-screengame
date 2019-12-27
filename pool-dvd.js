@@ -1,55 +1,25 @@
 const net = require('net')
 const _ = require('lodash')
-
-const connections = _.range(10)
-    .map(conn => getConn(conn))
-
-function getConn(connName = 'lol'){
-
-    const options = {
-        host:'151.217.40.82',
-        port: 1234
-    }
-
-    // Create TCP client.
-    const client = net.createConnection(options, function () {
-        console.log('Connection name : ' + connName)
-        console.log('Connection local address : ' + client.localAddress + ":" + client.localPort)
-        console.log('Connection remote address : ' + client.remoteAddress + ":" + client.remotePort)
-    })
-
-    client.setTimeout(1000)
-    client.setEncoding('utf8')
-
-    // When receive server send back data.
-    client.on('data', function (data) {
-        console.log('Server return data : ' + data)
-    })
-
-    // When connection disconnected.
-    client.on('end',function () {
-        connections[connections.indexOf(client)] = getConn(connName)
-        console.log('Client socket disconnect. ')
-    })
-
-    client.on('timeout', function () {
-        connections.splice(connections.indexOf(client), 1)
-        console.log('Client connection timeout. ')
-    })
-
-    client.on('error', function (err) {
-        connections[connections.indexOf(client)] = getConn(connName)
-        console.error(JSON.stringify(err))
-    })
-
-    return client
-}
-
 const fs = require('fs')
 const bmp = require('bmp-js')
-const bmpBuffer = fs.readFileSync('./tami-logo.bmp')
-const bmpData = bmp.decode(bmpBuffer)
-const chunkCount = 10
+
+const CONNECTIONS_COUNT = 10
+const SEND_DELAY = 100
+
+const getConn = (name = _.uniqueId(), options = { host: '151.217.111.34', port: 1234 }) => {
+   const conn = net
+        .createConnection(options, () => console.log(name, 'connection established'))
+        .setTimeout(5000)
+        .setEncoding('utf8')
+        .on('data', (data) => console.log(name, 'incoming ', data))
+        .on('timeout', () => (console.log(name, 'timeout'), replaceConn(conn)))
+        .on('error', (err) => (console.error(name, err), replaceConn(conn)))
+        .on('end', () => console.log(name, 'socket disconnect'))
+    return conn
+}
+
+const nextConn = () => (connections.unshift(connections.pop()),connections[0])
+const replaceConn = (conn) => connections.splice(connections.indexOf(conn), 1, getConn()).pop().destroy()
 const colors = [
     'C0C0C0',
     '808080',
@@ -66,45 +36,35 @@ const colors = [
     'FF00FF',
     '800080'
 ]
-const nextColor = () => {
-    const color = colors.pop()
-    colors.unshift(color)
-    return color;
-}
-const chunks =
-    _(bmpData.data)
-        .chunk(4)
-        .map(([a,b,g,r]) =>
-            [r,g,b].map(c => c.toString(16)).join('')
-        )
-        .chunk(bmpData.width)
-        .map((row, y) => {
-            return row
-                .map((color, x) =>
-                    `PX ${x} ${y} ${color.replace('000', '00FF00')}`
-                )
-                .filter(color => !color.endsWith('ffffff'))
-                .join('\n')
-        }
-        )
-        .chunk(chunkCount)
-        .map(chunk => chunk.join('\n'))
-        .value()
 
-const nextConn = () => {
-    const conn = connections.pop()
-    connections.unshift(conn)
+const nextColor = () => (colors.unshift(colors.pop()),colors[0])
+const connections = _.range(CONNECTIONS_COUNT).map(i => getConn())
 
-    return conn || connections.unshift(getConn())[0];
-}
+const {data, width, height} = bmp.decode(fs.readFileSync('./tami-logo-small.bmp'))
+const chunks = _(data)
+    //group per pixel
+    .chunk(4)
+    //map and convert to rgb hex string
+    .map(([a,b,g,r]) => [r,g,b].map(c => c == 0 ? '00' : c.toString(16)).join(''))
+    //split by row width
+    .chunk(width)
+    //create command strings
+    .map((row, y) => row.map((color, x) => `PX ${x} ${y} ${color}`).join('\n'))
+    //split per connections
+    .chunk(CONNECTIONS_COUNT)
+    //join each chunk rows
+    .map(chunk => chunk.join('\n'))
+    .value()
 
-const offset = {x:0, y:0}
+const offset = {x: 1000, y: 200}
 let dx = 20
 let dy = 20
 
 const sendLogo = () => {
     offset.x += dx
     offset.y += dy
+
+    process.stdout.write('.')
 
     if(offset.x > 1920 || offset.x <= 0) {
         dx *= -1
@@ -113,12 +73,11 @@ const sendLogo = () => {
     if(offset.y > 1080 || offset.y <= 0) {
         dy *= -1
     }
+    const {x, y} = offset
 
-    chunks.map((chunk, i) => {
-        const {x, y} = offset
-        nextConn().write(`OFFSET ${x} ${y}\n${chunk.replace(/00FF00/g, nextColor())}`)
-    }
+    chunks.map((chunk, i) =>
+        nextConn().write(`OFFSET ${x} ${y}\n${chunk}`)
     )
 }
-// console.log(chunks)
-setInterval(sendLogo, 100)
+
+setInterval(sendLogo, SEND_DELAY)
