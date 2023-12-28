@@ -1,11 +1,12 @@
 const net = require('net')
 const _ = require('lodash')
+const size = [1920, 1080]
 // This function create and return a net.Socket object to represent TCP client.
 function getConn(connName){
 
     const options = {
-        host:'151.217.40.82',
-        port: 1234
+        host:'151.217.15.79',
+        port: 1337
     }
 
     // Create TCP client.
@@ -34,6 +35,7 @@ function getConn(connName){
 
     client.on('error', function (err) {
         console.error(JSON.stringify(err))
+        reboot()
     })
 
     return client
@@ -41,7 +43,8 @@ function getConn(connName){
 
 const fs = require('fs')
 const bmp = require('bmp-js')
-const bmpBuffer = fs.readFileSync('./tami-logo.bmp')
+const { clear } = require('console')
+const bmpBuffer = fs.readFileSync('./baron-munchausen.bmp')
 const bmpData = bmp.decode(bmpBuffer)
 
 const cmd =
@@ -63,11 +66,20 @@ const cmd =
         .join('\n')
 
 
-const client = getConn('Node')
+let client = getConn('Node')
 // console.log(`sending`,cmd)
 const offset = 'OFFSET 1000 100\n'
 const sendLogo = () => {
-    client.write(`OFFSET 1000 100\n${cmd}\n`)
+    try {
+        client.write(`OFFSET 1000 100\n${cmd}\n`)
+    } catch(e) {
+        console.error(e)
+    }
 }
 
-setInterval(sendLogo, 10)
+let intid = setInterval(sendLogo, 10)
+const reboot = () => {
+    clearInterval(intid)
+    client = getConn('Node')
+    intid = setInterval(sendLogo, 10)
+}
