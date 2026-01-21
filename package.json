@@ -6,6 +6,6 @@
   "dependencies": {
     "bmp-js": "^0.1.0",
     "jimp": "^0.22.10",
-    "lodash": "^4.17.21"
+    "lodash": "^4.17.23"
   }
 }
